@@ -26,7 +26,7 @@ export default defineComponent({
       if (typeof value === 'string' || typeof value === 'number') {
         if (scene.background instanceof Color) scene.background.set(value)
         else scene.background = new Color(value)
-      } else if (value instanceof Texture) {
+      } else if (value instanceof Texture || value instanceof Color) {
         scene.background = value
       }
     }
