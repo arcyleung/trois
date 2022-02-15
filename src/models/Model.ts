@@ -4,7 +4,7 @@ import Object3D from '../core/Object3D'
 
 export default defineComponent({
   extends: Object3D,
-  emits: ['load', 'progress', 'error'],
+  emits: ['before-load', 'load', 'progress', 'error'],
   props: {
     src: { type: String, required: true },
   },
@@ -16,7 +16,6 @@ export default defineComponent({
   methods: {
     onLoad(model: TObject3D) {
       this.$emit('load', model)
-      this.initObject3D(model)
     },
     onProgress(progress: ProgressEvent) {
       this.progress = progress.loaded / progress.total
