@@ -1,5 +1,5 @@
 import { watch, toRef, ref, defineComponent, inject, provide, getCurrentInstance, onUnmounted, createApp as createApp$1 } from 'https://unpkg.com/vue@3.2.20/dist/vue.esm-browser.prod.js';
-import { Vector3, Raycaster as Raycaster$1, Plane as Plane$1, Vector2, InstancedMesh as InstancedMesh$1, WebGLRenderer, OrthographicCamera as OrthographicCamera$1, PerspectiveCamera as PerspectiveCamera$1, Scene as Scene$1, Color, Texture as Texture$1, Group as Group$1, WebGLCubeRenderTarget, RGBFormat, LinearMipmapLinearFilter, CubeCamera as CubeCamera$1, Mesh as Mesh$1, BufferGeometry, BufferAttribute, BoxGeometry as BoxGeometry$1, CircleGeometry as CircleGeometry$1, ConeGeometry as ConeGeometry$1, CylinderGeometry as CylinderGeometry$1, DodecahedronGeometry as DodecahedronGeometry$1, IcosahedronGeometry as IcosahedronGeometry$1, LatheGeometry as LatheGeometry$1, OctahedronGeometry as OctahedronGeometry$1, PlaneGeometry as PlaneGeometry$1, PolyhedronGeometry as PolyhedronGeometry$1, RingGeometry as RingGeometry$1, SphereGeometry as SphereGeometry$1, TetrahedronGeometry as TetrahedronGeometry$1, TorusGeometry as TorusGeometry$1, TorusKnotGeometry as TorusKnotGeometry$1, TubeGeometry as TubeGeometry$1, CatmullRomCurve3, Curve, SpotLight as SpotLight$1, DirectionalLight as DirectionalLight$1, AmbientLight as AmbientLight$1, HemisphereLight as HemisphereLight$1, PointLight as PointLight$1, RectAreaLight as RectAreaLight$1, MeshLambertMaterial, MeshPhongMaterial, MeshPhysicalMaterial, PointsMaterial as PointsMaterial$1, MeshStandardMaterial, MeshToonMaterial, MeshBasicMaterial, TextureLoader, MeshMatcapMaterial, ShaderMaterial as ShaderMaterial$1, ShaderChunk, UniformsUtils, ShaderLib, CubeReflectionMapping, CubeTextureLoader, VideoTexture as VideoTexture$1, DoubleSide, SpriteMaterial, Sprite as Sprite$1, Points as Points$1 } from 'https://cdn.skypack.dev/three@0.134.0/build/three.module.js';
+import { Vector3, Raycaster as Raycaster$1, Plane as Plane$1, Vector2, InstancedMesh as InstancedMesh$1, WebGLRenderer, OrthographicCamera as OrthographicCamera$1, PerspectiveCamera as PerspectiveCamera$1, Scene as Scene$1, Color, Texture as Texture$1, Group as Group$1, WebGLCubeRenderTarget, RGBFormat, LinearMipmapLinearFilter, CubeCamera as CubeCamera$1, Mesh as Mesh$1, BufferGeometry, BufferAttribute, BoxGeometry as BoxGeometry$1, CircleGeometry as CircleGeometry$1, ConeGeometry as ConeGeometry$1, CylinderGeometry as CylinderGeometry$1, DodecahedronGeometry as DodecahedronGeometry$1, ExtrudeGeometry as ExtrudeGeometry$1, IcosahedronGeometry as IcosahedronGeometry$1, LatheGeometry as LatheGeometry$1, OctahedronGeometry as OctahedronGeometry$1, PlaneGeometry as PlaneGeometry$1, PolyhedronGeometry as PolyhedronGeometry$1, RingGeometry as RingGeometry$1, SphereGeometry as SphereGeometry$1, ShapeGeometry as ShapeGeometry$1, TetrahedronGeometry as TetrahedronGeometry$1, TorusGeometry as TorusGeometry$1, TorusKnotGeometry as TorusKnotGeometry$1, TubeGeometry as TubeGeometry$1, CatmullRomCurve3, Curve, SpotLight as SpotLight$1, DirectionalLight as DirectionalLight$1, AmbientLight as AmbientLight$1, HemisphereLight as HemisphereLight$1, PointLight as PointLight$1, RectAreaLight as RectAreaLight$1, MeshLambertMaterial, MeshPhongMaterial, MeshPhysicalMaterial, PointsMaterial as PointsMaterial$1, ShadowMaterial as ShadowMaterial$1, MeshStandardMaterial, MeshToonMaterial, MeshBasicMaterial, TextureLoader, MeshMatcapMaterial, ShaderMaterial as ShaderMaterial$1, ShaderChunk, UniformsUtils, ShaderLib, CubeReflectionMapping, CubeTextureLoader, VideoTexture as VideoTexture$1, DoubleSide, SpriteMaterial, Sprite as Sprite$1, Points as Points$1 } from 'https://cdn.skypack.dev/three@0.134.0/build/three.module.js';
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/controls/OrbitControls.js';
 import { RectAreaLightUniformsLib } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { RectAreaLightHelper } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/helpers/RectAreaLightHelper.js';
@@ -359,7 +359,7 @@ function useThree(params) {
   };
   return obj;
   function createRenderer() {
-    const renderer2 = new WebGLRenderer({ canvas: config.canvas, antialias: config.antialias, alpha: config.alpha });
+    const renderer2 = new WebGLRenderer({ canvas: config.canvas, antialias: config.antialias, alpha: config.alpha, ...config.params });
     renderer2.autoClear = config.autoClear;
     return renderer2;
   }
@@ -492,6 +492,7 @@ const RendererInjectionKey = Symbol("Renderer");
 var Renderer = defineComponent({
   name: "Renderer",
   props: {
+    params: { type: Object, default: () => ({}) },
     antialias: Boolean,
     alpha: Boolean,
     autoClear: { type: Boolean, default: true },
@@ -523,6 +524,7 @@ var Renderer = defineComponent({
     });
     const config = {
       canvas,
+      params: props.params,
       antialias: props.antialias,
       alpha: props.alpha,
       autoClear: props.autoClear,
@@ -789,7 +791,6 @@ var Scene = defineComponent({
         else
           scene.background = new Color(value);
       } else if (value instanceof Texture$1 || value instanceof Color) {
-        console.log("is color!");
         scene.background = value;
       }
     };
@@ -1207,7 +1208,7 @@ function geometryComponent(name, props, createGeometry) {
   });
 }
 
-const props$l = {
+const props$n = {
   size: Number,
   width: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
@@ -1216,27 +1217,27 @@ const props$l = {
   heightSegments: { type: Number, default: 1 },
   depthSegments: { type: Number, default: 1 }
 };
-function createGeometry$f(comp) {
+function createGeometry$h(comp) {
   if (comp.size) {
     return new BoxGeometry$1(comp.size, comp.size, comp.size, comp.widthSegments, comp.heightSegments, comp.depthSegments);
   } else {
     return new BoxGeometry$1(comp.width, comp.height, comp.depth, comp.widthSegments, comp.heightSegments, comp.depthSegments);
   }
 }
-var BoxGeometry = geometryComponent("BoxGeometry", props$l, createGeometry$f);
+var BoxGeometry = geometryComponent("BoxGeometry", props$n, createGeometry$h);
 
-const props$k = {
+const props$m = {
   radius: { type: Number, default: 1 },
   segments: { type: Number, default: 8 },
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$e(comp) {
+function createGeometry$g(comp) {
   return new CircleGeometry$1(comp.radius, comp.segments, comp.thetaStart, comp.thetaLength);
 }
-var CircleGeometry = geometryComponent("CircleGeometry", props$k, createGeometry$e);
+var CircleGeometry = geometryComponent("CircleGeometry", props$m, createGeometry$g);
 
-const props$j = {
+const props$l = {
   radius: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
   radialSegments: { type: Number, default: 8 },
@@ -1245,12 +1246,12 @@ const props$j = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$d(comp) {
+function createGeometry$f(comp) {
   return new ConeGeometry$1(comp.radius, comp.height, comp.radialSegments, comp.heightSegments, comp.openEnded, comp.thetaStart, comp.thetaLength);
 }
-var ConeGeometry = geometryComponent("ConeGeometry", props$j, createGeometry$d);
+var ConeGeometry = geometryComponent("ConeGeometry", props$l, createGeometry$f);
 
-const props$i = {
+const props$k = {
   radiusTop: { type: Number, default: 1 },
   radiusBottom: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
@@ -1260,72 +1261,81 @@ const props$i = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$c(comp) {
+function createGeometry$e(comp) {
   return new CylinderGeometry$1(comp.radiusTop, comp.radiusBottom, comp.height, comp.radialSegments, comp.heightSegments, comp.openEnded, comp.thetaStart, comp.thetaLength);
 }
-var CylinderGeometry = geometryComponent("CylinderGeometry", props$i, createGeometry$c);
+var CylinderGeometry = geometryComponent("CylinderGeometry", props$k, createGeometry$e);
+
+const props$j = {
+  radius: { type: Number, default: 1 },
+  detail: { type: Number, default: 0 }
+};
+function createGeometry$d(comp) {
+  return new DodecahedronGeometry$1(comp.radius, comp.detail);
+}
+var DodecahedronGeometry = geometryComponent("DodecahedronGeometry", props$j, createGeometry$d);
+
+const props$i = {
+  shapes: { type: [Object, Array] },
+  options: { type: Object }
+};
+function createGeometry$c(comp) {
+  return new ExtrudeGeometry$1(comp.shapes, comp.options);
+}
+var ExtrudeGeometry = geometryComponent("ExtrudeGeometry", props$i, createGeometry$c);
 
 const props$h = {
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
 function createGeometry$b(comp) {
-  return new DodecahedronGeometry$1(comp.radius, comp.detail);
-}
-var DodecahedronGeometry = geometryComponent("DodecahedronGeometry", props$h, createGeometry$b);
-
-const props$g = {
-  radius: { type: Number, default: 1 },
-  detail: { type: Number, default: 0 }
-};
-function createGeometry$a(comp) {
   return new IcosahedronGeometry$1(comp.radius, comp.detail);
 }
-var IcosahedronGeometry = geometryComponent("IcosahedronGeometry", props$g, createGeometry$a);
+var IcosahedronGeometry = geometryComponent("IcosahedronGeometry", props$h, createGeometry$b);
 
-const props$f = {
+const props$g = {
   points: Array,
   segments: { type: Number, default: 12 },
   phiStart: { type: Number, default: 0 },
   phiLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$9(comp) {
+function createGeometry$a(comp) {
   return new LatheGeometry$1(comp.points, comp.segments, comp.phiStart, comp.phiLength);
 }
-var LatheGeometry = geometryComponent("LatheGeometry", props$f, createGeometry$9);
+var LatheGeometry = geometryComponent("LatheGeometry", props$g, createGeometry$a);
 
-const props$e = {
+const props$f = {
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
-function createGeometry$8(comp) {
+function createGeometry$9(comp) {
   return new OctahedronGeometry$1(comp.radius, comp.detail);
 }
-var OctahedronGeometry = geometryComponent("OctahedronGeometry", props$e, createGeometry$8);
+var OctahedronGeometry = geometryComponent("OctahedronGeometry", props$f, createGeometry$9);
 
-const props$d = {
+const props$e = {
   width: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
   widthSegments: { type: Number, default: 1 },
   heightSegments: { type: Number, default: 1 }
 };
-function createGeometry$7(comp) {
+function createGeometry$8(comp) {
   return new PlaneGeometry$1(comp.width, comp.height, comp.widthSegments, comp.heightSegments);
 }
-var PlaneGeometry = geometryComponent("PlaneGeometry", props$d, createGeometry$7);
+var PlaneGeometry = geometryComponent("PlaneGeometry", props$e, createGeometry$8);
 
-const props$c = {
+const props$d = {
   vertices: Array,
   indices: Array,
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
-function createGeometry$6(comp) {
+function createGeometry$7(comp) {
   return new PolyhedronGeometry$1(comp.vertices, comp.indices, comp.radius, comp.detail);
 }
-var PolyhedronGeometry = geometryComponent("PolyhedronGeometry", props$c, createGeometry$6);
+var PolyhedronGeometry = geometryComponent("PolyhedronGeometry", props$d, createGeometry$7);
 
-const props$b = {
+const props$c = {
   innerRadius: { type: Number, default: 0.5 },
   outerRadius: { type: Number, default: 1 },
   thetaSegments: { type: Number, default: 8 },
@@ -1333,20 +1343,33 @@ const props$b = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$5(comp) {
+function createGeometry$6(comp) {
   return new RingGeometry$1(comp.innerRadius, comp.outerRadius, comp.thetaSegments, comp.phiSegments, comp.thetaStart, comp.thetaLength);
 }
-var RingGeometry = geometryComponent("RingGeometry", props$b, createGeometry$5);
+var RingGeometry = geometryComponent("RingGeometry", props$c, createGeometry$6);
 
-const props$a = {
+const props$b = {
   radius: { type: Number, default: 1 },
   widthSegments: { type: Number, default: 12 },
-  heightSegments: { type: Number, default: 12 }
+  heightSegments: { type: Number, default: 12 },
+  phiStart: { type: Number, default: 0 },
+  phiLength: { type: Number, default: Math.PI * 2 },
+  thetaStart: { type: Number, default: 0 },
+  thetaLength: { type: Number, default: Math.PI }
+};
+function createGeometry$5(comp) {
+  return new SphereGeometry$1(comp.radius, comp.widthSegments, comp.heightSegments, comp.phiStart, comp.phiLength, comp.thetaStart, comp.thetaLength);
+}
+var SphereGeometry = geometryComponent("SphereGeometry", props$b, createGeometry$5);
+
+const props$a = {
+  shapes: { type: [Object, Array] },
+  curveSegments: { type: Number }
 };
 function createGeometry$4(comp) {
-  return new SphereGeometry$1(comp.radius, comp.widthSegments, comp.heightSegments);
+  return new ShapeGeometry$1(comp.shapes, comp.curveSegments);
 }
-var SphereGeometry = geometryComponent("SphereGeometry", props$a, createGeometry$4);
+var ShapeGeometry = geometryComponent("ShapeGeometry", props$a, createGeometry$4);
 
 const props$9 = {
   radius: { type: Number, default: 1 },
@@ -1663,6 +1686,7 @@ const LambertMaterial = materialComponent("LambertMaterial", { props: { type: Ob
 const PhongMaterial = materialComponent("PhongMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new MeshPhongMaterial(opts));
 const PhysicalMaterial = materialComponent("PhysicalMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new MeshPhysicalMaterial(opts));
 const PointsMaterial = materialComponent("PointsMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new PointsMaterial$1(opts));
+const ShadowMaterial = materialComponent("ShadowMaterial", { color: { type: String, default: "#000000" }, props: { type: Object, default: () => ({}) } }, (opts) => new ShadowMaterial$1(opts));
 const StandardMaterial = materialComponent("StandardMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new MeshStandardMaterial(opts));
 const ToonMaterial = materialComponent("ToonMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new MeshToonMaterial(opts));
 
@@ -1884,29 +1908,29 @@ var VideoTexture = defineComponent({
   }
 });
 
-var Box = meshComponent("Box", props$l, createGeometry$f);
+var Box = meshComponent("Box", props$n, createGeometry$h);
 
-var Circle = meshComponent("Circle", props$k, createGeometry$e);
+var Circle = meshComponent("Circle", props$m, createGeometry$g);
 
-var Cone = meshComponent("Cone", props$j, createGeometry$d);
+var Cone = meshComponent("Cone", props$l, createGeometry$f);
 
-var Cylinder = meshComponent("Cylinder", props$i, createGeometry$c);
+var Cylinder = meshComponent("Cylinder", props$k, createGeometry$e);
 
-var Dodecahedron = meshComponent("Dodecahedron", props$h, createGeometry$b);
+var Dodecahedron = meshComponent("Dodecahedron", props$j, createGeometry$d);
 
-var Icosahedron = meshComponent("Icosahedron", props$g, createGeometry$a);
+var Icosahedron = meshComponent("Icosahedron", props$h, createGeometry$b);
 
-var Lathe = meshComponent("Lathe", props$f, createGeometry$9);
+var Lathe = meshComponent("Lathe", props$g, createGeometry$a);
 
-var Octahedron = meshComponent("Octahedron", props$e, createGeometry$8);
+var Octahedron = meshComponent("Octahedron", props$f, createGeometry$9);
 
-var Plane = meshComponent("Plane", props$d, createGeometry$7);
+var Plane = meshComponent("Plane", props$e, createGeometry$8);
 
-var Polyhedron = meshComponent("Polyhedron", props$c, createGeometry$6);
+var Polyhedron = meshComponent("Polyhedron", props$d, createGeometry$7);
 
-var Ring = meshComponent("Ring", props$b, createGeometry$5);
+var Ring = meshComponent("Ring", props$c, createGeometry$6);
 
-var Sphere = meshComponent("Sphere", props$a, createGeometry$4);
+var Sphere = meshComponent("Sphere", props$b, createGeometry$5);
 
 var Tetrahedron = meshComponent("Tetrahedron", props$9, createGeometry$3);
 
@@ -2193,7 +2217,7 @@ var Points = defineComponent({
 
 var Model = defineComponent({
   extends: Object3D,
-  emits: ["load", "progress", "error"],
+  emits: ["before-load", "load", "progress", "error"],
   props: {
     src: { type: String, required: true }
   },
@@ -2205,7 +2229,6 @@ var Model = defineComponent({
   methods: {
     onLoad(model) {
       this.$emit("load", model);
-      this.initObject3D(model);
     },
     onProgress(progress) {
       this.progress = progress.loaded / progress.total;
@@ -2221,8 +2244,10 @@ var GLTF = defineComponent({
   extends: Model,
   created() {
     const loader = new GLTFLoader();
+    this.$emit("before-load", loader);
     loader.load(this.src, (gltf) => {
-      this.onLoad(gltf.scene);
+      this.onLoad(gltf);
+      this.initObject3D(gltf.scene);
     }, this.onProgress, this.onError);
   }
 });
@@ -2231,8 +2256,10 @@ var FBX = defineComponent({
   extends: Model,
   created() {
     const loader = new FBXLoader();
+    this.$emit("before-load", loader);
     loader.load(this.src, (fbx) => {
       this.onLoad(fbx);
+      this.initObject3D(fbx);
     }, this.onProgress, this.onError);
   }
 });
@@ -2721,6 +2748,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   ConeGeometry: ConeGeometry,
   CylinderGeometry: CylinderGeometry,
   DodecahedronGeometry: DodecahedronGeometry,
+  ExtrudeGeometry: ExtrudeGeometry,
   IcosahedronGeometry: IcosahedronGeometry,
   LatheGeometry: LatheGeometry,
   OctahedronGeometry: OctahedronGeometry,
@@ -2728,6 +2756,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   PolyhedronGeometry: PolyhedronGeometry,
   RingGeometry: RingGeometry,
   SphereGeometry: SphereGeometry,
+  ShapeGeometry: ShapeGeometry,
   TetrahedronGeometry: TetrahedronGeometry,
   TorusGeometry: TorusGeometry,
   TorusKnotGeometry: TorusKnotGeometry,
@@ -2744,6 +2773,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   PhongMaterial: PhongMaterial,
   PhysicalMaterial: PhysicalMaterial,
   PointsMaterial: PointsMaterial,
+  ShadowMaterial: ShadowMaterial,
   StandardMaterial: StandardMaterial,
   ToonMaterial: ToonMaterial,
   MaterialInjectionKey: MaterialInjectionKey,
@@ -2925,5 +2955,5 @@ function useTextures() {
   }
 }
 
-export { AmbientLight, BasicMaterial, BokehPass, Box, BoxGeometry, Geometry as BufferGeometry, PerspectiveCamera as Camera, Circle, CircleGeometry, ComposerInjectionKey, Cone, ConeGeometry, CubeCamera, CubeTexture, Cylinder, CylinderGeometry, DirectionalLight, Dodecahedron, DodecahedronGeometry, EffectComposer, EffectPass, FXAAPass, FBX as FbxModel, FilmPass, GLTF as GltfModel, Group, HalftonePass, HemisphereLight, Icosahedron, IcosahedronGeometry, Image, InstancedMesh, LambertMaterial, Lathe, LatheGeometry, MatcapMaterial, BaseMaterial as Material, MaterialInjectionKey, Mesh, MeshInjectionKey, Object3D, Octahedron, OctahedronGeometry, OrthographicCamera, PerspectiveCamera, PhongMaterial, PhysicalMaterial, Plane, PlaneGeometry, PointLight, Points, PointsMaterial, Polyhedron, PolyhedronGeometry, Raycaster, RectAreaLight, RenderPass, Renderer, RendererInjectionKey, Ring, RingGeometry, SMAAPass, SSAOPass, Scene, SceneInjectionKey, ShaderMaterial, Sphere, SphereGeometry, SpotLight, Sprite, StandardMaterial, SubSurfaceMaterial, Tetrahedron, TetrahedronGeometry, Text, Texture, TiltShiftPass, ToonMaterial, Torus, TorusGeometry, TorusKnot, TorusKnotGeometry, TroisJSVuePlugin, Tube, TubeGeometry, UnrealBloomPass, VideoTexture, ZoomBlurPass, applyObjectProps, bindObjectProp, bindObjectProps, bindProp, bindProps, createApp, getMatcapUrl, lerp, limit, propsValues, setFromProp, useTextures };
+export { AmbientLight, BasicMaterial, BokehPass, Box, BoxGeometry, Geometry as BufferGeometry, PerspectiveCamera as Camera, Circle, CircleGeometry, ComposerInjectionKey, Cone, ConeGeometry, CubeCamera, CubeTexture, Cylinder, CylinderGeometry, DirectionalLight, Dodecahedron, DodecahedronGeometry, EffectComposer, EffectPass, ExtrudeGeometry, FXAAPass, FBX as FbxModel, FilmPass, GLTF as GltfModel, Group, HalftonePass, HemisphereLight, Icosahedron, IcosahedronGeometry, Image, InstancedMesh, LambertMaterial, Lathe, LatheGeometry, MatcapMaterial, BaseMaterial as Material, MaterialInjectionKey, Mesh, MeshInjectionKey, Object3D, Octahedron, OctahedronGeometry, OrthographicCamera, PerspectiveCamera, PhongMaterial, PhysicalMaterial, Plane, PlaneGeometry, PointLight, Points, PointsMaterial, Polyhedron, PolyhedronGeometry, Raycaster, RectAreaLight, RenderPass, Renderer, RendererInjectionKey, Ring, RingGeometry, SMAAPass, SSAOPass, Scene, SceneInjectionKey, ShaderMaterial, ShadowMaterial, ShapeGeometry, Sphere, SphereGeometry, SpotLight, Sprite, StandardMaterial, SubSurfaceMaterial, Tetrahedron, TetrahedronGeometry, Text, Texture, TiltShiftPass, ToonMaterial, Torus, TorusGeometry, TorusKnot, TorusKnotGeometry, TroisJSVuePlugin, Tube, TubeGeometry, UnrealBloomPass, VideoTexture, ZoomBlurPass, applyObjectProps, bindObjectProp, bindObjectProps, bindProp, bindProps, createApp, getMatcapUrl, lerp, limit, propsValues, setFromProp, useTextures };
 //# sourceMappingURL=trois.module.cdn.js.map
