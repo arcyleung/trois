@@ -363,7 +363,7 @@ function useThree(params) {
   };
   return obj;
   function createRenderer() {
-    const renderer2 = new three.WebGLRenderer({ canvas: config.canvas, antialias: config.antialias, alpha: config.alpha });
+    const renderer2 = new three.WebGLRenderer({ canvas: config.canvas, antialias: config.antialias, alpha: config.alpha, ...config.params });
     renderer2.autoClear = config.autoClear;
     return renderer2;
   }
@@ -496,6 +496,7 @@ const RendererInjectionKey = Symbol("Renderer");
 var Renderer = vue.defineComponent({
   name: "Renderer",
   props: {
+    params: { type: Object, default: () => ({}) },
     antialias: Boolean,
     alpha: Boolean,
     autoClear: { type: Boolean, default: true },
@@ -505,6 +506,7 @@ var Renderer = vue.defineComponent({
     shadow: Boolean,
     width: String,
     height: String,
+    pixelRatio: Number,
     xr: Boolean,
     props: { type: Object, default: () => ({}) },
     onReady: Function
@@ -527,6 +529,7 @@ var Renderer = vue.defineComponent({
     });
     const config = {
       canvas,
+      params: props.params,
       antialias: props.antialias,
       alpha: props.alpha,
       autoClear: props.autoClear,
@@ -540,6 +543,10 @@ var Renderer = vue.defineComponent({
       config.height = parseInt(props.height);
     const three = useThree(config);
     bindObjectProp(props, "props", three.renderer);
+    vue.watchEffect(() => {
+      if (props.pixelRatio)
+        three.renderer.setPixelRatio(props.pixelRatio);
+    });
     const renderFn = () => {
     };
     return {
@@ -793,7 +800,6 @@ var Scene = vue.defineComponent({
         else
           scene.background = new three.Color(value);
       } else if (value instanceof three.Texture || value instanceof three.Color) {
-        console.log("is color!");
         scene.background = value;
       }
     };
@@ -1021,7 +1027,7 @@ var CubeCamera = vue.defineComponent({
       return {};
     }
     const renderer = rendererC.renderer, scene = rendererC.scene;
-    const cubeRT = new three.WebGLCubeRenderTarget(props.cubeRTSize, { format: three.RGBFormat, generateMipmaps: true, minFilter: three.LinearMipmapLinearFilter });
+    const cubeRT = new three.WebGLCubeRenderTarget(props.cubeRTSize, { format: three.RGBAFormat, generateMipmaps: true, minFilter: three.LinearMipmapLinearFilter });
     const cubeCamera = new three.CubeCamera(props.cubeCameraNear, props.cubeCameraFar, cubeRT);
     const updateRT = () => {
       props.hideMeshes.forEach((m) => {
@@ -1133,6 +1139,7 @@ function meshComponent(name, props, createGeometry) {
 }
 
 const Geometry = vue.defineComponent({
+  emits: ["created"],
   props: {
     rotateX: Number,
     rotateY: Number,
@@ -1173,7 +1180,9 @@ const Geometry = vue.defineComponent({
         }
       });
       geometry.computeBoundingBox();
+      geometry.userData.component = this;
       this.geometry = geometry;
+      this.$emit("created", geometry);
     },
     rotateGeometry() {
       if (!this.geometry)
@@ -1206,12 +1215,14 @@ function geometryComponent(name, props, createGeometry) {
     methods: {
       createGeometry() {
         this.geometry = createGeometry(this);
+        this.geometry.userData.component = this;
+        this.$emit("created", this.geometry);
       }
     }
   });
 }
 
-const props$l = {
+const props$n = {
   size: Number,
   width: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
@@ -1220,27 +1231,27 @@ const props$l = {
   heightSegments: { type: Number, default: 1 },
   depthSegments: { type: Number, default: 1 }
 };
-function createGeometry$f(comp) {
+function createGeometry$h(comp) {
   if (comp.size) {
     return new three.BoxGeometry(comp.size, comp.size, comp.size, comp.widthSegments, comp.heightSegments, comp.depthSegments);
   } else {
     return new three.BoxGeometry(comp.width, comp.height, comp.depth, comp.widthSegments, comp.heightSegments, comp.depthSegments);
   }
 }
-var BoxGeometry = geometryComponent("BoxGeometry", props$l, createGeometry$f);
+var BoxGeometry = geometryComponent("BoxGeometry", props$n, createGeometry$h);
 
-const props$k = {
+const props$m = {
   radius: { type: Number, default: 1 },
   segments: { type: Number, default: 8 },
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$e(comp) {
+function createGeometry$g(comp) {
   return new three.CircleGeometry(comp.radius, comp.segments, comp.thetaStart, comp.thetaLength);
 }
-var CircleGeometry = geometryComponent("CircleGeometry", props$k, createGeometry$e);
+var CircleGeometry = geometryComponent("CircleGeometry", props$m, createGeometry$g);
 
-const props$j = {
+const props$l = {
   radius: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
   radialSegments: { type: Number, default: 8 },
@@ -1249,12 +1260,12 @@ const props$j = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$d(comp) {
+function createGeometry$f(comp) {
   return new three.ConeGeometry(comp.radius, comp.height, comp.radialSegments, comp.heightSegments, comp.openEnded, comp.thetaStart, comp.thetaLength);
 }
-var ConeGeometry = geometryComponent("ConeGeometry", props$j, createGeometry$d);
+var ConeGeometry = geometryComponent("ConeGeometry", props$l, createGeometry$f);
 
-const props$i = {
+const props$k = {
   radiusTop: { type: Number, default: 1 },
   radiusBottom: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
@@ -1264,72 +1275,81 @@ const props$i = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$c(comp) {
+function createGeometry$e(comp) {
   return new three.CylinderGeometry(comp.radiusTop, comp.radiusBottom, comp.height, comp.radialSegments, comp.heightSegments, comp.openEnded, comp.thetaStart, comp.thetaLength);
 }
-var CylinderGeometry = geometryComponent("CylinderGeometry", props$i, createGeometry$c);
+var CylinderGeometry = geometryComponent("CylinderGeometry", props$k, createGeometry$e);
+
+const props$j = {
+  radius: { type: Number, default: 1 },
+  detail: { type: Number, default: 0 }
+};
+function createGeometry$d(comp) {
+  return new three.DodecahedronGeometry(comp.radius, comp.detail);
+}
+var DodecahedronGeometry = geometryComponent("DodecahedronGeometry", props$j, createGeometry$d);
+
+const props$i = {
+  shapes: { type: [Object, Array] },
+  options: { type: Object }
+};
+function createGeometry$c(comp) {
+  return new three.ExtrudeGeometry(comp.shapes, comp.options);
+}
+var ExtrudeGeometry = geometryComponent("ExtrudeGeometry", props$i, createGeometry$c);
 
 const props$h = {
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
 function createGeometry$b(comp) {
-  return new three.DodecahedronGeometry(comp.radius, comp.detail);
-}
-var DodecahedronGeometry = geometryComponent("DodecahedronGeometry", props$h, createGeometry$b);
-
-const props$g = {
-  radius: { type: Number, default: 1 },
-  detail: { type: Number, default: 0 }
-};
-function createGeometry$a(comp) {
   return new three.IcosahedronGeometry(comp.radius, comp.detail);
 }
-var IcosahedronGeometry = geometryComponent("IcosahedronGeometry", props$g, createGeometry$a);
+var IcosahedronGeometry = geometryComponent("IcosahedronGeometry", props$h, createGeometry$b);
 
-const props$f = {
+const props$g = {
   points: Array,
   segments: { type: Number, default: 12 },
   phiStart: { type: Number, default: 0 },
   phiLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$9(comp) {
+function createGeometry$a(comp) {
   return new three.LatheGeometry(comp.points, comp.segments, comp.phiStart, comp.phiLength);
 }
-var LatheGeometry = geometryComponent("LatheGeometry", props$f, createGeometry$9);
+var LatheGeometry = geometryComponent("LatheGeometry", props$g, createGeometry$a);
 
-const props$e = {
+const props$f = {
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
-function createGeometry$8(comp) {
+function createGeometry$9(comp) {
   return new three.OctahedronGeometry(comp.radius, comp.detail);
 }
-var OctahedronGeometry = geometryComponent("OctahedronGeometry", props$e, createGeometry$8);
+var OctahedronGeometry = geometryComponent("OctahedronGeometry", props$f, createGeometry$9);
 
-const props$d = {
+const props$e = {
   width: { type: Number, default: 1 },
   height: { type: Number, default: 1 },
   widthSegments: { type: Number, default: 1 },
   heightSegments: { type: Number, default: 1 }
 };
-function createGeometry$7(comp) {
+function createGeometry$8(comp) {
   return new three.PlaneGeometry(comp.width, comp.height, comp.widthSegments, comp.heightSegments);
 }
-var PlaneGeometry = geometryComponent("PlaneGeometry", props$d, createGeometry$7);
+var PlaneGeometry = geometryComponent("PlaneGeometry", props$e, createGeometry$8);
 
-const props$c = {
+const props$d = {
   vertices: Array,
   indices: Array,
   radius: { type: Number, default: 1 },
   detail: { type: Number, default: 0 }
 };
-function createGeometry$6(comp) {
+function createGeometry$7(comp) {
   return new three.PolyhedronGeometry(comp.vertices, comp.indices, comp.radius, comp.detail);
 }
-var PolyhedronGeometry = geometryComponent("PolyhedronGeometry", props$c, createGeometry$6);
+var PolyhedronGeometry = geometryComponent("PolyhedronGeometry", props$d, createGeometry$7);
 
-const props$b = {
+const props$c = {
   innerRadius: { type: Number, default: 0.5 },
   outerRadius: { type: Number, default: 1 },
   thetaSegments: { type: Number, default: 8 },
@@ -1337,20 +1357,33 @@ const props$b = {
   thetaStart: { type: Number, default: 0 },
   thetaLength: { type: Number, default: Math.PI * 2 }
 };
-function createGeometry$5(comp) {
+function createGeometry$6(comp) {
   return new three.RingGeometry(comp.innerRadius, comp.outerRadius, comp.thetaSegments, comp.phiSegments, comp.thetaStart, comp.thetaLength);
 }
-var RingGeometry = geometryComponent("RingGeometry", props$b, createGeometry$5);
+var RingGeometry = geometryComponent("RingGeometry", props$c, createGeometry$6);
 
-const props$a = {
+const props$b = {
   radius: { type: Number, default: 1 },
   widthSegments: { type: Number, default: 12 },
-  heightSegments: { type: Number, default: 12 }
+  heightSegments: { type: Number, default: 12 },
+  phiStart: { type: Number, default: 0 },
+  phiLength: { type: Number, default: Math.PI * 2 },
+  thetaStart: { type: Number, default: 0 },
+  thetaLength: { type: Number, default: Math.PI }
+};
+function createGeometry$5(comp) {
+  return new three.SphereGeometry(comp.radius, comp.widthSegments, comp.heightSegments, comp.phiStart, comp.phiLength, comp.thetaStart, comp.thetaLength);
+}
+var SphereGeometry = geometryComponent("SphereGeometry", props$b, createGeometry$5);
+
+const props$a = {
+  shapes: { type: [Object, Array] },
+  curveSegments: { type: Number }
 };
 function createGeometry$4(comp) {
-  return new three.SphereGeometry(comp.radius, comp.widthSegments, comp.heightSegments);
+  return new three.ShapeGeometry(comp.shapes, comp.curveSegments);
 }
-var SphereGeometry = geometryComponent("SphereGeometry", props$a, createGeometry$4);
+var ShapeGeometry = geometryComponent("ShapeGeometry", props$a, createGeometry$4);
 
 const props$9 = {
   radius: { type: Number, default: 1 },
@@ -1667,6 +1700,7 @@ const LambertMaterial = materialComponent("LambertMaterial", { props: { type: Ob
 const PhongMaterial = materialComponent("PhongMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new three.MeshPhongMaterial(opts));
 const PhysicalMaterial = materialComponent("PhysicalMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new three.MeshPhysicalMaterial(opts));
 const PointsMaterial = materialComponent("PointsMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new three.PointsMaterial(opts));
+const ShadowMaterial = materialComponent("ShadowMaterial", { color: { type: String, default: "#000000" }, props: { type: Object, default: () => ({}) } }, (opts) => new three.ShadowMaterial(opts));
 const StandardMaterial = materialComponent("StandardMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new three.MeshStandardMaterial(opts));
 const ToonMaterial = materialComponent("ToonMaterial", { props: { type: Object, default: () => ({}) } }, (opts) => new three.MeshToonMaterial(opts));
 
@@ -1888,29 +1922,29 @@ var VideoTexture = vue.defineComponent({
   }
 });
 
-var Box = meshComponent("Box", props$l, createGeometry$f);
+var Box = meshComponent("Box", props$n, createGeometry$h);
 
-var Circle = meshComponent("Circle", props$k, createGeometry$e);
+var Circle = meshComponent("Circle", props$m, createGeometry$g);
 
-var Cone = meshComponent("Cone", props$j, createGeometry$d);
+var Cone = meshComponent("Cone", props$l, createGeometry$f);
 
-var Cylinder = meshComponent("Cylinder", props$i, createGeometry$c);
+var Cylinder = meshComponent("Cylinder", props$k, createGeometry$e);
 
-var Dodecahedron = meshComponent("Dodecahedron", props$h, createGeometry$b);
+var Dodecahedron = meshComponent("Dodecahedron", props$j, createGeometry$d);
 
-var Icosahedron = meshComponent("Icosahedron", props$g, createGeometry$a);
+var Icosahedron = meshComponent("Icosahedron", props$h, createGeometry$b);
 
-var Lathe = meshComponent("Lathe", props$f, createGeometry$9);
+var Lathe = meshComponent("Lathe", props$g, createGeometry$a);
 
-var Octahedron = meshComponent("Octahedron", props$e, createGeometry$8);
+var Octahedron = meshComponent("Octahedron", props$f, createGeometry$9);
 
-var Plane = meshComponent("Plane", props$d, createGeometry$7);
+var Plane = meshComponent("Plane", props$e, createGeometry$8);
 
-var Polyhedron = meshComponent("Polyhedron", props$c, createGeometry$6);
+var Polyhedron = meshComponent("Polyhedron", props$d, createGeometry$7);
 
-var Ring = meshComponent("Ring", props$b, createGeometry$5);
+var Ring = meshComponent("Ring", props$c, createGeometry$6);
 
-var Sphere = meshComponent("Sphere", props$a, createGeometry$4);
+var Sphere = meshComponent("Sphere", props$b, createGeometry$5);
 
 var Tetrahedron = meshComponent("Tetrahedron", props$9, createGeometry$3);
 
@@ -2197,7 +2231,7 @@ var Points = vue.defineComponent({
 
 var Model = vue.defineComponent({
   extends: Object3D,
-  emits: ["load", "progress", "error"],
+  emits: ["before-load", "load", "progress", "error"],
   props: {
     src: { type: String, required: true }
   },
@@ -2209,7 +2243,6 @@ var Model = vue.defineComponent({
   methods: {
     onLoad(model) {
       this.$emit("load", model);
-      this.initObject3D(model);
     },
     onProgress(progress) {
       this.progress = progress.loaded / progress.total;
@@ -2225,8 +2258,10 @@ var GLTF = vue.defineComponent({
   extends: Model,
   created() {
     const loader = new GLTFLoader_js.GLTFLoader();
+    this.$emit("before-load", loader);
     loader.load(this.src, (gltf) => {
-      this.onLoad(gltf.scene);
+      this.onLoad(gltf);
+      this.initObject3D(gltf.scene);
     }, this.onProgress, this.onError);
   }
 });
@@ -2235,8 +2270,10 @@ var FBX = vue.defineComponent({
   extends: Model,
   created() {
     const loader = new FBXLoader_js.FBXLoader();
+    this.$emit("before-load", loader);
     loader.load(this.src, (fbx) => {
       this.onLoad(fbx);
+      this.initObject3D(fbx);
     }, this.onProgress, this.onError);
   }
 });
@@ -2725,6 +2762,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   ConeGeometry: ConeGeometry,
   CylinderGeometry: CylinderGeometry,
   DodecahedronGeometry: DodecahedronGeometry,
+  ExtrudeGeometry: ExtrudeGeometry,
   IcosahedronGeometry: IcosahedronGeometry,
   LatheGeometry: LatheGeometry,
   OctahedronGeometry: OctahedronGeometry,
@@ -2732,6 +2770,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   PolyhedronGeometry: PolyhedronGeometry,
   RingGeometry: RingGeometry,
   SphereGeometry: SphereGeometry,
+  ShapeGeometry: ShapeGeometry,
   TetrahedronGeometry: TetrahedronGeometry,
   TorusGeometry: TorusGeometry,
   TorusKnotGeometry: TorusKnotGeometry,
@@ -2748,6 +2787,7 @@ var TROIS = /*#__PURE__*/Object.freeze({
   PhongMaterial: PhongMaterial,
   PhysicalMaterial: PhysicalMaterial,
   PointsMaterial: PointsMaterial,
+  ShadowMaterial: ShadowMaterial,
   StandardMaterial: StandardMaterial,
   ToonMaterial: ToonMaterial,
   MaterialInjectionKey: MaterialInjectionKey,
@@ -2950,6 +2990,7 @@ exports.Dodecahedron = Dodecahedron;
 exports.DodecahedronGeometry = DodecahedronGeometry;
 exports.EffectComposer = EffectComposer;
 exports.EffectPass = EffectPass;
+exports.ExtrudeGeometry = ExtrudeGeometry;
 exports.FXAAPass = FXAAPass;
 exports.FbxModel = FBX;
 exports.FilmPass = FilmPass;
@@ -2995,6 +3036,8 @@ exports.SSAOPass = SSAOPass;
 exports.Scene = Scene;
 exports.SceneInjectionKey = SceneInjectionKey;
 exports.ShaderMaterial = ShaderMaterial;
+exports.ShadowMaterial = ShadowMaterial;
+exports.ShapeGeometry = ShapeGeometry;
 exports.Sphere = Sphere;
 exports.SphereGeometry = SphereGeometry;
 exports.SpotLight = SpotLight;
